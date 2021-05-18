@@ -37,6 +37,7 @@ const ReactRefreshWebpackPlugin = require('@pmmmwh/react-refresh-webpack-plugin'
 const getCacheIdentifier = require('react-dev-utils/getCacheIdentifier');
 // @remove-on-eject-end
 const postcssNormalize = require('postcss-normalize');
+const AntdScssThemePlugin = require('ipsm-scss-theme-plugin');
 
 const appPackageJson = require(paths.appPackageJson);
 
@@ -88,7 +89,7 @@ module.exports = function (webpackEnv) {
   const shouldUseReactRefresh = env.raw.FAST_REFRESH;
 
   // common function to get style loaders
-  const getStyleLoaders = (cssOptions, preProcessor) => {
+  const getStyleLoaders = (cssOptions, preProcessor, preProcessorOptions) => {
     const loaders = [
       isEnvDevelopment && require.resolve('style-loader'),
       isEnvProduction && {
@@ -140,8 +141,8 @@ module.exports = function (webpackEnv) {
         },
         {
           loader: require.resolve(preProcessor),
-          options: {
-            sourceMap: true,
+          options: preProcessorOptions ? preProcessorOptions : {
+              sourceMap: true
           },
         }
       );
@@ -543,7 +544,7 @@ module.exports = function (webpackEnv) {
                     ? shouldUseSourceMap
                     : isEnvDevelopment,
                 },
-                'sass-loader'
+                AntdScssThemePlugin.themify('sass-loader')
               ),
               // Don't consider CSS imports dead code even if the
               // containing package claims to have no side effects.
@@ -565,17 +566,20 @@ module.exports = function (webpackEnv) {
                     getLocalIdent: getCSSModuleLocalIdent,
                   },
                 },
-                'sass-loader'
+                AntdScssThemePlugin.themify('sass-loader')
               ),
             },
             {
-                test: lessRegex,
-                exclude: lessModuleRegex,
-                use: getStyleLoaders({
+              test: lessRegex,
+              exclude: lessModuleRegex,
+              use: getStyleLoaders({
                   importLoaders: 2
                 },
-                'less-loader'
-                ),
+                AntdScssThemePlugin.themify('less-loader'),
+                {
+                  javascriptEnabled: true,
+                  sourceMap: true,
+                }),
                 sideEffects: true
             },
             {
@@ -585,8 +589,11 @@ module.exports = function (webpackEnv) {
                   modules: true,
                   localIdentName: getCSSModuleLocalIdent
                 },
-                'less-loader'
-                ),
+                AntdScssThemePlugin.themify('less-loader'),
+                {
+                  javascriptEnabled: true,
+                  sourceMap: true,
+                }),
             },
             // "file" loader makes sure those assets get served by WebpackDevServer.
             // When you `import` an asset, you get its (virtual) filename.
@@ -765,6 +772,7 @@ module.exports = function (webpackEnv) {
           // The formatter is invoked directly in WebpackDevServerUtils during development
           formatter: isEnvProduction ? typescriptFormatter : undefined,
         }),
+        new AntdScssThemePlugin(path.join(paths.appSrc, 'theme.scss')),
     ].filter(Boolean),
     // Some libraries import Node modules but don't use them in the browser.
     // Tell webpack to provide empty mocks for them so importing them works.
